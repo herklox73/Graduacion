@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Una postal para ti</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Instrument+Sans:wght@400;600&family=Caveat:wght@500;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE: tierna, cercana, con humor suave; hecha a mano para una diseñadora.
+   IDEA: correo de verdad: una postal que viaja de Santo Domingo a Ibarra, se voltea, y trae un abanico de muestras de color.
+   PICTURE: el Imbabura y Yahuarcocha al atardecer, ilustrados en capas con estampilla y matasellos.
+   COLOUR and TYPE: fondo rosa empolvado, cielo durazno, montañas verde azulado, acento frambuesa; DM Serif Display, Caveat a mano, Instrument Sans.
+   LAYOUT: un solo objeto centrado por escena; cuatro escenas en secuencia, todo en una columna en el celular. */
+:root{color-scheme:light;--bg:#f3dcd6;--bg2:#ecc9c1;--ink:#2a2226;--fram:#c8285a;--mont:#2f5b5e;--papel:#fffaf4}
+:root[data-theme=dark]{--bg:#3a2730;--bg2:#2c1d24}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#3a2730;--bg2:#2c1d24}}
+*{box-sizing:border-box;min-width:0}
+html,body{height:100%}
+body{margin:0;color:var(--ink);font:16px/1.55 "Instrument Sans",system-ui,sans-serif;overflow-x:clip;
+  background:radial-gradient(120% 80% at 50% 0%,var(--bg),var(--bg2));min-height:100vh}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.35;mix-blend-mode:multiply;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 .5 0 0 0 0 .4 0 0 0 0 .4 0 0 0 .18 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E")}
+.escena{position:fixed;inset:0;display:grid;place-items:center;padding:20px 14px;overflow-y:auto;
+  opacity:0;visibility:hidden;transform:translateY(16px);transition:opacity .7s ease,transform .7s ease,visibility 0s .7s}
+.escena.activa{opacity:1;visibility:visible;transform:none;transition:opacity .7s ease .15s,transform .7s ease .15s}
+.col{width:min(100%,640px);display:grid;gap:18px;justify-items:center;text-align:center}
+.mano{font:700 clamp(28px,7vw,40px)/1.05 Caveat,cursive;margin:0;color:var(--ink)}
+:root[data-theme=dark] .mano,:root[data-theme=dark] .sub{color:#fbe9e4}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]) .mano,:root:not([data-theme=light]) .sub{color:#fbe9e4}}
+.sub{margin:0;font-size:15px;color:#6b5157}
+.btn{min-height:46px;padding:0 24px;border-radius:999px;border:0;background:var(--fram);color:#fff;font:600 16px "Instrument Sans",sans-serif;cursor:pointer;
+  box-shadow:0 8px 18px -8px rgba(200,40,90,.7);transition:transform .2s}
+.btn:hover{transform:translateY(-2px)}.btn:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+.btn.sec{background:transparent;color:inherit;border:1.5px solid currentColor;box-shadow:none}
+
+/* ---- 1. VIAJE ---- */
+.mapa{width:min(100%,520px);aspect-ratio:1.15;background:var(--papel);border-radius:6px;box-shadow:0 24px 40px -20px rgba(60,20,30,.45);padding:8px}
+.mapa svg{width:100%;height:100%;display:block}
+
+/* ---- 2. POSTAL ---- */
+.postal{width:min(100%,620px);aspect-ratio:3/2;perspective:1400px;cursor:pointer}
+.tilt{width:100%;height:100%;transform:rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));transition:transform .25s ease-out;transform-style:preserve-3d}
+.giro{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform 1s cubic-bezier(.4,.1,.2,1)}
+.volteada .giro{transform:rotateY(180deg)}
+.cara{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:6px;overflow:hidden;
+  box-shadow:0 30px 50px -22px rgba(60,20,30,.6),0 0 0 1px rgba(0,0,0,.04)}
+.frente{background:#fff;padding:3.2%}
+.frente .arte{position:relative;width:100%;height:100%;overflow:hidden;border-radius:2px}
+.frente svg{position:absolute;inset:0;width:100%;height:100%}
+.capa{transition:transform .25s ease-out}
+.letras{position:absolute;left:0;right:0;top:9%;text-align:center;pointer-events:none}
+.letras small{display:block;font:italic 400 clamp(13px,2.6vw,19px)/1 "DM Serif Display",serif;color:#fff;letter-spacing:.02em;text-shadow:0 1px 2px rgba(0,0,0,.25)}
+.letras b{display:block;font:400 clamp(40px,10.5vw,82px)/.95 "DM Serif Display",serif;color:#fff8ee;margin-top:4px;
+  text-shadow:2px 2px 0 var(--fram),4px 4px 0 #7d1a3c,6px 6px 12px rgba(0,0,0,.25)}
+.estampilla{position:absolute;right:4%;top:5%;width:15%;aspect-ratio:.82;padding:6px;
+  background:radial-gradient(circle,transparent 2.6px,#fff 3px) -4px -4px/8px 8px;transform:rotate(4deg);filter:drop-shadow(0 1px 1px rgba(0,0,0,.2))}
+.estampilla div{width:100%;height:100%;background:var(--fram);display:grid;place-items:center}
+.estampilla svg{position:static;width:70%;height:auto}
+.pista{font:700 26px/1 Caveat,cursive;color:var(--ink);animation:flota 2.4s ease-in-out infinite}
+@keyframes flota{50%{transform:translateY(-4px)}}
+
+.dorso{transform:rotateY(180deg);background:var(--papel);display:grid;grid-template-columns:1.25fr 1fr;padding:5% 5% 4%;gap:4%;text-align:left;
+  background-image:linear-gradient(90deg,transparent calc(55.5% - .5px),#d9c6bd calc(55.5% - .5px),#d9c6bd calc(55.5% + .5px),transparent 0)}
+.msj{font:500 clamp(15px,3.2vw,22px)/1.16 Caveat,cursive;color:#3b2c33;overflow:auto;padding-right:4px}
+.msj p{margin:0 0 .4em}
+.msj .fir{text-align:right;font-weight:700}
+.der{position:relative;display:flex;flex-direction:column;justify-content:flex-end;gap:2px}
+.der .estampilla{position:absolute;right:0;top:0;width:34%}
+.sello-post{position:absolute;right:22%;top:4%;width:46%;opacity:.75;transform:rotate(-12deg)}
+.linea{border-bottom:1px solid #cdb8ae;font:500 clamp(14px,3vw,21px)/1.5 Caveat,cursive;color:#3b2c33;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.linea span{font:400 11px "Instrument Sans",sans-serif;color:#8a7279;margin-right:6px}
+
+/* ---- 3. ABANICO ---- */
+.abanico{position:relative;width:min(100%,520px);height:clamp(300px,62vw,380px)}
+.mue{position:absolute;left:50%;bottom:6%;width:clamp(68px,17vw,96px);height:82%;margin-left:calc(clamp(68px,17vw,96px) / -2);
+  transform-origin:50% 92%;transform:rotate(0deg);transition:transform .9s cubic-bezier(.3,1.3,.5,1);border:0;padding:0;cursor:pointer;
+  background:#fff;border-radius:6px;box-shadow:0 6px 16px -6px rgba(60,20,30,.45);display:flex;flex-direction:column;text-align:left;font:inherit;color:#2a2226}
+.mue .c{flex:1;border-radius:6px 6px 0 0}
+.mue .t{padding:6px 7px 18px;font-size:12px;line-height:1.2}
+.mue .t b{display:block;font-size:13px}
+.mue::after{content:"";position:absolute;left:50%;bottom:7%;width:9px;height:9px;margin-left:-4.5px;border-radius:50%;background:#bba;box-shadow:inset 0 1px 2px rgba(0,0,0,.4)}
+.mue.sel{z-index:20;box-shadow:0 14px 26px -8px rgba(60,20,30,.6)}
+.mue:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.lectura{min-height:84px;max-width:44ch;font:700 clamp(22px,5vw,28px)/1.15 Caveat,cursive;color:var(--ink);transition:opacity .3s}
+:root[data-theme=dark] .lectura{color:#fbe9e4}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]) .lectura{color:#fbe9e4}}
+
+/* ---- 4. FINAL ---- */
+.final{background:var(--papel);border-radius:6px;padding:clamp(30px,6vw,56px) clamp(22px,6vw,52px);box-shadow:0 30px 50px -22px rgba(60,20,30,.6);width:min(100%,600px)}
+.final h1{font:400 clamp(48px,12vw,84px)/1 "DM Serif Display",serif;margin:0;color:var(--fram);text-wrap:balance}
+.final .n{font:italic 400 clamp(26px,6vw,36px)/1.1 "DM Serif Display",serif;margin:6px 0 0}
+.final .t{margin:16px 0 0;font-weight:600}
+.final .u{margin:2px 0 0;color:#6b5157;font-size:15px}
+.final .f{font:700 30px/1 Caveat,cursive;margin:22px 0 0}
+.acc{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:22px}
+/* ---- RAMO ---- */
+.ramo{border:0;background:none;padding:0;cursor:pointer;width:clamp(200px,52vw,270px);margin-bottom:-78px;position:relative;z-index:2;-webkit-tap-highlight-color:transparent}
+.ramo svg{width:100%;height:auto;display:block;filter:drop-shadow(0 12px 14px rgba(60,20,30,.3));transform-origin:50% 90%}
+.ramo:focus-visible{outline:3px solid var(--ink);outline-offset:4px;border-radius:12px}
+.ramo.sacude svg{animation:sacude .7s ease}
+@keyframes sacude{25%{transform:rotate(-5deg)}55%{transform:rotate(4deg)}80%{transform:rotate(-2deg)}}
+.flor{transform-box:fill-box;transform-origin:center;transform:scale(0)}
+#e4.activa .flor{animation:abre .75s cubic-bezier(.3,1.6,.5,1) forwards;animation-delay:var(--d)}
+@keyframes abre{to{transform:scale(1)}}
+.meceo{transform-box:fill-box;transform-origin:50% 0;animation:mece var(--m) ease-in-out infinite alternate}
+@keyframes mece{from{transform:rotate(-7deg)}to{transform:rotate(7deg)}}
+.tallo{stroke-dasharray:220;stroke-dashoffset:220}
+#e4.activa .tallo{animation:crece 1s ease forwards .15s}
+@keyframes crece{to{stroke-dashoffset:0}}
+#e4 .final{padding-top:clamp(86px,14vw,100px)}
+.carta-final{margin:22px auto 0;max-width:40ch;font:500 clamp(21px,4.6vw,25px)/1.25 Caveat,cursive;color:#3b2c33;text-wrap:pretty}
+.psst{margin:14px 0 0;font:700 22px/1 Caveat,cursive;color:#8a6470}
+@media(prefers-reduced-motion:reduce){.flor{transform:none}.tallo{stroke-dashoffset:0}}
+canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:50}
+@media(max-width:600px){.postal{aspect-ratio:3/4}.dorso{grid-template-columns:1fr;background-image:none;grid-template-rows:1fr auto;padding:7% 6% 6%;gap:10px}.msj{font-size:20px}.der .estampilla,.sello-post{display:none}.linea{font-size:18px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{transition-duration:.01s!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<!-- 1. EL VIAJE -->
+<section class="escena activa" id="e1">
+  <div class="col">
+    <p class="mano">Tienes correo desde Santo Domingo</p>
+    <div class="mapa">
+      <svg viewBox="0 0 460 400" aria-label="Ruta de Santo Domingo a Ibarra">
+        <defs><linearGradient id="cm" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fde8d7"/><stop offset="1" stop-color="#fff6ee"/></linearGradient></defs>
+        <rect width="460" height="400" fill="url(#cm)"/>
+        <g fill="#c9dcd3"><path d="M200 400 L280 170 L310 230 L350 120 L390 210 L420 150 L460 260 V400Z"/></g>
+        <g fill="#9fc2b6"><path d="M240 400 L320 230 L345 270 L380 190 L415 280 L440 235 L460 300 V400Z"/></g>
+        <path d="M0 330 Q60 300 120 330 T240 340" fill="none" stroke="#e7c9b9" stroke-width="2"/>
+        <g fill="#7fae7a" opacity=".8"><circle cx="70" cy="300" r="10"/><circle cx="88" cy="306" r="8"/><circle cx="120" cy="296" r="11"/><circle cx="52" cy="312" r="7"/></g>
+        <path id="ruta" d="M95 290 C150 230 170 170 240 150 S340 120 372 78" fill="none" stroke="#c8285a" stroke-width="2.5" stroke-dasharray="2 9" stroke-linecap="round"/>
+        <circle cx="95" cy="290" r="7" fill="#c8285a"/><circle cx="95" cy="290" r="13" fill="none" stroke="#c8285a" opacity=".35"/>
+        <circle cx="372" cy="78" r="7" fill="#2f5b5e"/><circle cx="372" cy="78" r="13" fill="none" stroke="#2f5b5e" opacity=".35"/>
+        <text x="95" y="328" text-anchor="middle" font-family="Caveat,cursive" font-weight="700" font-size="26" fill="#2a2226">Santo Domingo</text>
+        <text x="372" y="54" text-anchor="middle" font-family="Caveat,cursive" font-weight="700" font-size="26" fill="#2a2226">Ibarra</text>
+        <g id="sobrecito"><rect x="-17" y="-11" width="34" height="22" rx="2" fill="#fff" stroke="#2a2226" stroke-width="1.5"/><path d="M-17 -11 L0 3 L17 -11" fill="none" stroke="#2a2226" stroke-width="1.5"/><circle cx="0" cy="3" r="4" fill="#c8285a"/></g>
+      </svg>
+    </div>
+    <button class="btn" id="enviar">Enviar la postal ✈</button>
+  </div>
+</section>
+
+<!-- 2. LA POSTAL -->
+<section class="escena" id="e2">
+  <div class="col">
+    <p class="mano" id="tit2">¡Llegó a Ibarra!</p>
+    <div class="postal" id="postal" role="button" tabindex="0" aria-label="Postal: toca para darle la vuelta">
+      <div class="tilt" id="tilt"><div class="giro">
+        <div class="cara frente"><div class="arte">
+          <svg viewBox="0 0 600 400" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+            <defs>
+              <linearGradient id="cielo" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6a48f"/><stop offset=".55" stop-color="#fcd3a8"/><stop offset="1" stop-color="#fde9c9"/></linearGradient>
+              <linearGradient id="lago" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7fb2b8"/><stop offset="1" stop-color="#3f7a80"/></linearGradient>
+            </defs>
+            <rect width="600" height="400" fill="url(#cielo)"/>
+            <g class="capa" data-p="4"><circle cx="420" cy="215" r="46" fill="#fff1d6" opacity=".95"/></g>
+            <g class="capa" data-p="7"><path d="M-20 300 L60 215 L95 240 L150 170 L200 225 L240 205 L300 300Z" fill="#b9a7b8" opacity=".75"/></g>
+            <g class="capa" data-p="10">
+              <path d="M130 310 L260 175 L285 150 L300 160 L318 140 L336 158 L352 150 L470 290 L520 310Z" fill="#4f7d7c"/>
+              <path d="M285 150 L300 160 L318 140 L336 158 L352 150 L362 165 L338 172 L318 160 L298 176 L276 166Z" fill="#e9f1ee"/>
+              <path d="M318 140 L336 158 L352 150 L470 290 L380 300 L330 200Z" fill="#3c6767" opacity=".7"/>
+            </g>
+            <g class="capa" data-p="14">
+              <path d="M-20 330 Q90 290 190 312 T420 300 T640 315 V400 H-20Z" fill="#2f5b5e"/>
+              <ellipse cx="300" cy="352" rx="200" ry="24" fill="url(#lago)"/>
+              <path d="M150 350 H230 M330 356 H430 M250 344 H300" stroke="#fff6e6" stroke-width="2" stroke-linecap="round" opacity=".55"/>
+            </g>
+            <g class="capa" data-p="20" fill="#1f3d3f">
+              <path d="M40 400 V330 M40 330 l-14 26 h28z M40 312 l-11 22 h22z"/>
+              <path d="M40 300 L26 330 H54Z M40 318 L22 352 H58Z M38 352 h4 v48 h-4z"/>
+              <path d="M560 300 L544 334 H576Z M560 318 L540 356 H580Z M558 356 h4 v44 h-4z"/>
+              <path d="M520 326 L508 352 H532Z M518 352 h4 v48 h-4z"/>
+              <rect x="-20" y="384" width="640" height="20"/>
+            </g>
+            <g class="capa" data-p="6" fill="none" stroke="#6b4a57" stroke-width="2" stroke-linecap="round"><path d="M150 120 q6 -6 12 0 q6 -6 12 0"/><path d="M185 100 q5 -5 10 0 q5 -5 10 0"/></g>
+          </svg>
+          <div class="letras"><small>Saludos desde Ibarra</small><b>¡Felicidades!</b></div>
+        </div></div>
+
+        <div class="cara dorso">
+          <div class="msj" id="msj"></div>
+          <div class="der">
+            <div class="estampilla"><div><svg viewBox="0 0 40 30"><path d="M20 4 L38 11 L20 18 L2 11Z" fill="#fff"/><path d="M10 14 v7 q10 6 20 0 v-7 L20 18Z" fill="#fff"/></svg></div></div>
+            <svg class="sello-post" viewBox="0 0 120 80" aria-hidden="true">
+              <defs><path id="arco" d="M22 40 a28 28 0 1 1 56 0 a28 28 0 1 1 -56 0"/></defs>
+              <circle cx="50" cy="40" r="30" fill="none" stroke="#2f5b5e" stroke-width="2"/>
+              <text font-size="8.5" font-family="Instrument Sans,sans-serif" fill="#2f5b5e" letter-spacing="1"><textPath href="#arco">SANTO DOMINGO · ECUADOR ·</textPath></text>
+              <text x="50" y="44" text-anchor="middle" font-size="10" font-weight="600" font-family="Instrument Sans,sans-serif" fill="#2f5b5e">2026</text>
+              <path d="M84 28 q9 -5 18 0 t18 0 M84 40 q9 -5 18 0 t18 0 M84 52 q9 -5 18 0 t18 0" fill="none" stroke="#2f5b5e" stroke-width="2"/>
+            </svg>
+            <div class="linea"><span>Para</span><b id="para" style="font-weight:700"></b></div>
+            <div class="linea">Diseñadora Gráfica</div>
+            <div class="linea">PUCE · Sede Ibarra</div>
+            <div class="linea">Ibarra, Imbabura</div>
+          </div>
+        </div>
+      </div></div>
+    </div>
+    <p class="pista" id="pista">dale la vuelta ↻</p>
+    <button class="btn" id="mas" hidden>Hay algo más adentro →</button>
+  </div>
+</section>
+
+<!-- 3. EL ABANICO -->
+<section class="escena" id="e3">
+  <div class="col">
+    <p class="mano">Tu paleta de estos años</p>
+    <p class="sub">Toca cada muestra de color</p>
+    <div class="abanico" id="abanico"></div>
+    <p class="lectura" id="lectura" aria-live="polite"></p>
+    <button class="btn" id="fin">Y lo más importante… →</button>
+  </div>
+</section>
+
+<!-- 4. FINAL -->
+<section class="escena" id="e4">
+  <div class="col">
+  <button class="ramo" id="ramo" aria-label="Ramo de flores para Nicole: tócalo"><svg id="ramoSvg" viewBox="10 50 240 250" aria-hidden="true"></svg></button>
+  <div class="final">
+    <h1>¡Felicidades!</h1>
+    <p class="n" id="nom"></p>
+    <p class="t">Licenciada en Diseño Gráfico</p>
+    <p class="u">Pontificia Universidad Católica del Ecuador · Sede Ibarra</p>
+    <p class="carta-final" id="cartaFinal"></p>
+    <p class="f" id="fir"></p>
+    <div class="acc"><button class="btn" id="confeti">Más confeti</button><button class="btn sec" id="otra">Verla otra vez</button></div>
+    <p class="psst">psst… toca las flores</p>
+  </div>
+  </div>
+</section>
+<canvas id="lienzo"></canvas>
+
+<script>
+{
+/* ============ EDITA AQUÍ ============ */
+const CONFIG = {
+  nombre: "Nicole Barahona",  // su nombre o como le dices
+  firma: "Carlos",
+  mensaje: [
+    "¡Hola, Nicole!",
+    "Desde Santo Domingo te mando esta postal, porque la distancia no me iba a dejar sin felicitarte.",
+    "Hoy cierras una etapa muy importante para ti. Estoy feliz por ti, sé lo mucho que te has esforzado durante este tiempo y te mereces todas las cosas buenas.",
+    "Estoy orgulloso de ti."
+  ],
+  final: "Felicidades, me alegro mucho por ti. Te mando los mejores deseos, sé que lo mereces. Te has esforzado mucho y todas esas desveladas al final valieron la pena, porque ya eres toda una diseñadora gráfica. Sé que te va a ir bien en todo lo que te propongas. No te rindas, puedes lograr grandes cosas. Sigue siendo esa persona espectacular que nunca dejará de brillar. Que Diosito te bendiga siempre. TQM, cuídate mucho. Un abrazo a la distancia.",
+  paleta: [
+    {nombre:"Esfuerzo", cod:"2021 C", color:"#f2a7a0", texto:"Sé todo lo que te costó llegar hasta aquí."},
+    {nombre:"Desveladas", cod:"2022 M", color:"#c8285a", texto:"Todas esas noches sin dormir valieron la pena."},
+    {nombre:"Talento", cod:"2023 K", color:"#2a2226", texto:"Lo que haces con tus manos y tus ideas es bonito de verdad."},
+    {nombre:"Espectacular", cod:"2024 C", color:"#2f8f9d", texto:"Eres una persona espectacular, nunca lo olvides."},
+    {nombre:"Orgullo", cod:"2025 G", color:"#2f5b5e", texto:"Estoy muy orgulloso de ti, Nicole."},
+    {nombre:"Lo que viene", cod:"2026 Y", color:"#f2b632", texto:"Te mereces lo mejor. ¡Y lo mejor recién empieza!"}
+  ]
+};
+/* =================================== */
+
+const $ = s => document.querySelector(s);
+const esc = t => String(t).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const quieto = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+$("#msj").innerHTML = CONFIG.mensaje.map(p => `<p>${esc(p)}</p>`).join("") + `<p class="fir">${esc(CONFIG.firma)}</p>`;
+$("#para").textContent = CONFIG.nombre;
+$("#nom").textContent = CONFIG.nombre;
+$("#fir").textContent = "Con cariño, " + CONFIG.firma;
+$("#cartaFinal").textContent = CONFIG.final;
+
+function ir(n){ document.querySelectorAll(".escena").forEach((e,i) => e.classList.toggle("activa", i === n-1)); }
+
+/* 1. viaje del sobre por la ruta */
+const ruta = $("#ruta"), sob = $("#sobrecito"), L = ruta.getTotalLength();
+function poner(t){
+  const p = ruta.getPointAtLength(L*t), q = ruta.getPointAtLength(Math.min(L, L*t + 1));
+  const ang = Math.atan2(q.y - p.y, q.x - p.x) * 57.3;
+  sob.setAttribute("transform", `translate(${p.x} ${p.y}) rotate(${ang*0.25}) scale(${1 + Math.sin(t*Math.PI)*0.35})`);
+}
+poner(0);
+$("#enviar").addEventListener("click", e => {
+  e.target.disabled = true;
+  const dur = quieto ? 1 : 2600, t0 = performance.now();
+  (function anda(now){
+    const t = Math.min(1, (now - t0) / dur), k = t < .5 ? 2*t*t : 1 - (-2*t + 2)**2 / 2;
+    poner(k);
+    if (t < 1) requestAnimationFrame(anda); else setTimeout(() => ir(2), 450);
+  })(t0);
+});
+
+/* 2. postal: inclinación con el puntero + volteo */
+const postal = $("#postal"), tilt = $("#tilt"), capas = [...document.querySelectorAll(".capa")];
+postal.addEventListener("pointermove", e => {
+  if (quieto) return;
+  const r = postal.getBoundingClientRect(), x = (e.clientX - r.left) / r.width - .5, y = (e.clientY - r.top) / r.height - .5;
+  tilt.style.setProperty("--ry", (x*10) + "deg"); tilt.style.setProperty("--rx", (-y*8) + "deg");
+  capas.forEach(c => c.setAttribute("transform", `translate(${-x*c.dataset.p} ${-y*c.dataset.p*0.5})`));
+});
+postal.addEventListener("pointerleave", () => { tilt.style.setProperty("--ry","0deg"); tilt.style.setProperty("--rx","0deg"); capas.forEach(c => c.removeAttribute("transform")); });
+function voltear(){
+  postal.classList.toggle("volteada");
+  const v = postal.classList.contains("volteada");
+  $("#pista").textContent = v ? "toca para ver el frente ↻" : "dale la vuelta ↻";
+  $("#tit2").textContent = v ? "Léela con calma" : "¡Llegó a Ibarra!";
+  if (v) $("#mas").hidden = false;
+}
+postal.addEventListener("click", voltear);
+postal.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); voltear(); } });
+$("#mas").addEventListener("click", () => { ir(3); setTimeout(abrirAbanico, 500); });
+
+/* 3. abanico de muestras */
+const ab = $("#abanico"), n = CONFIG.paleta.length;
+ab.innerHTML = CONFIG.paleta.map((m,i) => `
+  <button class="mue" data-i="${i}" aria-label="${esc(m.nombre)}" style="z-index:${i}">
+    <span class="c" style="background:${esc(m.color)}"></span>
+    <span class="t"><b>${esc(m.nombre)}</b>PUCE ${esc(m.cod)}</span>
+  </button>`).join("");
+const mues = [...ab.querySelectorAll(".mue")];
+const angulo = i => (i - (n-1)/2) * (innerWidth < 600 ? 11 : 14);
+function abrirAbanico(){ mues.forEach((m,i) => setTimeout(() => m.style.transform = `rotate(${angulo(i)}deg)`, quieto ? 0 : i*90)); $("#lectura").textContent = ""; }
+mues.forEach((m,i) => m.addEventListener("click", () => {
+  mues.forEach((o,j) => { o.classList.remove("sel"); o.style.transform = `rotate(${angulo(j)}deg)`; });
+  m.classList.add("sel");
+  m.style.transform = `rotate(${angulo(i)}deg) translateY(-26px)`;
+  const l = $("#lectura"); l.style.opacity = 0;
+  setTimeout(() => { l.textContent = CONFIG.paleta[i].texto; l.style.opacity = 1; }, 200);
+}));
+addEventListener("resize", () => { if ($("#e3").classList.contains("activa")) mues.forEach((m,i) => { if (!m.classList.contains("sel")) m.style.transform = `rotate(${angulo(i)}deg)`; }); });
+$("#fin").addEventListener("click", () => { ir(4); setTimeout(() => confeti(180), 400); setTimeout(() => petalos(40), 1600); });
+
+/* 4. confeti de papel */
+const cv = $("#lienzo"), ctx = cv.getContext("2d");
+const colores = CONFIG.paleta.map(p => p.color).concat("#ffffff");
+let piezas = [], anim = null;
+function medir(){ cv.width = innerWidth*devicePixelRatio; cv.height = innerHeight*devicePixelRatio; ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0); }
+addEventListener("resize", medir); medir();
+function confeti(k){
+  if (quieto) return;
+  for (let i=0;i<k;i++) piezas.push({x:innerWidth*(Math.random()*.6+.2),y:-20-Math.random()*innerHeight*.4,vx:(Math.random()-.5)*3,vy:Math.random()*2+1.5,
+    r:Math.random()*6.28,vr:(Math.random()-.5)*.25,w:7+Math.random()*7,h:4+Math.random()*5,c:colores[i%colores.length],f:Math.random()*6.28});
+  if (!anim) anim = requestAnimationFrame(paso);
+}
+function petalos(k){
+  if (quieto) return;
+  const pc = ["#9a8fe0","#ef8fb4","#b7b0f0","#fffaf2","#f6c94c"];
+  for (let i=0;i<k;i++) piezas.push({pet:true,x:Math.random()*innerWidth,y:-20-Math.random()*innerHeight*.5,vx:(Math.random()-.5)*1.5,vy:Math.random()*1.4+1,
+    r:Math.random()*6.28,vr:(Math.random()-.5)*.08,w:7+Math.random()*5,h:10+Math.random()*6,c:pc[i%pc.length],f:Math.random()*6.28});
+  if (!anim) anim = requestAnimationFrame(paso);
+}
+function paso(){
+  ctx.clearRect(0,0,innerWidth,innerHeight);
+  piezas = piezas.filter(p => p.y < innerHeight + 30);
+  for (const p of piezas){
+    p.f += .05; p.x += p.vx + Math.sin(p.f)*1.2; p.y += p.vy; p.r += p.vr;
+    ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.r); ctx.scale(1, Math.cos(p.f*2));
+    ctx.fillStyle = p.c; if (p.pet){ ctx.beginPath(); ctx.ellipse(0,0,p.w/2,p.h/2,0,0,6.29); ctx.fill(); } else ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h); ctx.restore();
+  }
+  anim = piezas.length ? requestAnimationFrame(paso) : null;
+}
+
+/* ramo de flores */
+{
+  const marg = (x,y,k,d) => `<g transform="translate(${x} ${y}) scale(${k})"><g class="flor" style="--d:${d}s">${Array.from({length:12},(_,i)=>`<ellipse cy="-14" rx="5" ry="11" fill="#fffaf2" stroke="#e8d9cf" transform="rotate(${i*30})"/>`).join("")}<circle r="7.5" fill="#f2b632"/><circle r="7.5" fill="url(#luz)"/></g></g>`;
+  const ama = (x,y,k,d) => `<g transform="translate(${x} ${y}) scale(${k})"><g class="flor" style="--d:${d}s">${Array.from({length:5},(_,i)=>`<circle cy="-9" r="8" fill="#f6c94c" transform="rotate(${i*72})"/>`).join("")}<circle r="5" fill="#c8285a"/></g></g>`;
+  const puntos = (x,y,d) => `<g class="flor" style="--d:${d}s">${[[0,0],[7,-5],[-6,-6],[3,-12],[-9,3],[10,4]].map(([a,b])=>`<circle cx="${x+a}" cy="${y+b}" r="2.6" fill="#fffaf2" stroke="#e8d9cf" stroke-width=".6"/>`).join("")}</g>`;
+  /* campanilla: cuelga desde (0,0) */
+  const campana = (x,y,k,c,osc,d,ang) => `<g transform="translate(${x} ${y}) rotate(${ang}) scale(${k})"><g class="meceo" style="--m:${(2.6+Math.random()).toFixed(2)}s"><g class="flor" style="--d:${d}s">
+    <path d="M0 0 V8" stroke="#3c6767" stroke-width="2" stroke-linecap="round"/>
+    <path d="M-9 8 C-10 18 -12 24 -15 30 Q-10 27 -7.5 31 Q-4 27 0 31 Q4 27 7.5 31 Q10 27 15 30 C12 24 10 18 9 8 Q0 2 -9 8Z" fill="${c}"/>
+    <path d="M9 8 C10 18 12 24 15 30 Q10 27 7.5 31 Q6 26 4 9 Q7 7 9 8Z" fill="${osc}" opacity=".55"/>
+    <path d="M-6 11 C-7 18 -8 22 -10 26" stroke="#fff" stroke-width="2" stroke-linecap="round" fill="none" opacity=".45"/>
+    <ellipse cy="29.5" rx="10" ry="2.2" fill="${osc}" opacity=".6"/>
+    <path d="M0 29 v5" stroke="#f6c94c" stroke-width="1.6" stroke-linecap="round"/>
+  </g></g></g>`;
+  /* vara arqueada con campanillas colgando */
+  const vara = (p0,p1,p2,c,osc,ts,k,d0) => {
+    const q = t => [(1-t)**2*p0[0]+2*(1-t)*t*p1[0]+t*t*p2[0], (1-t)**2*p0[1]+2*(1-t)*t*p1[1]+t*t*p2[1]];
+    const tallo = `<path class="tallo" d="M${p0} Q${p1} ${p2}" fill="none" stroke="#3c6767" stroke-width="2.6" stroke-linecap="round"/>`;
+    const bells = ts.map((t,i) => { const [x,y] = q(t); return campana(x.toFixed(1), y.toFixed(1), k*(.8+t*.25), c, osc, (d0+i*.12).toFixed(2), (p2[0]>p0[0]?-1:1)*6); }).join("");
+    return {tallo, bells};
+  };
+  const varas = [
+    vara([128,215],[116,72],[166,80],"#9a8fe0","#5d52a8",[.55,.72,.88,1],.9,.45),
+    vara([124,215],[128,74],[88,88],"#ef8fb4","#b84d7c",[.56,.74,.9,1],.88,.55),
+    vara([136,215],[188,96],[198,132],"#b7b0f0","#6f66bf",[.6,.8,1],.82,.7),
+    vara([120,215],[72,100],[62,136],"#e9709b","#a83a68",[.6,.8,1],.82,.8)
+  ];
+  const fl = [[104,126],[156,122],[130,150],[74,158],[188,158],[84,110],[178,106],[130,90]];
+  const tallos = fl.map(([x,y]) => `<path class="tallo" d="M130 240 Q${(130+x)/2} ${(240+y)/2+10} ${x} ${y}" fill="none" stroke="#3c6767" stroke-width="3" stroke-linecap="round"/>`).join("") + varas.map(v=>v.tallo).join("");
+  const hoja = (x,y,r,c="#4f7d7c") => `<ellipse class="flor" style="--d:.4s" cx="${x}" cy="${y}" rx="8" ry="20" fill="${c}" transform="rotate(${r} ${x} ${y})"/>`;
+  $("#ramoSvg").innerHTML = `
+    <defs><radialGradient id="luz" cx=".32" cy=".28" r=".75"><stop offset="0" stop-color="#fff" stop-opacity=".45"/><stop offset=".6" stop-color="#fff" stop-opacity="0"/></radialGradient>
+    <linearGradient id="kraftAtras" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f1dcc0"/><stop offset="1" stop-color="#d9b896"/></linearGradient></defs>
+    <path d="M30 104 Q80 66 130 62 Q180 66 230 104 L160 292 H100Z" fill="url(#kraftAtras)"/>
+    <path d="M30 104 Q80 66 130 62 Q180 66 230 104" fill="none" stroke="#f7e8d4" stroke-width="2"/>
+    <path d="M130 62 L130 200" stroke="#d2ae88" stroke-width="1" opacity=".6"/>
+    ${tallos}
+    ${hoja(58,150,-55)}${hoja(202,148,55)}${hoja(82,140,-30,"#5f8f8a")}${hoja(178,138,30,"#5f8f8a")}${hoja(110,160,-15)}${hoja(150,158,15)}${hoja(66,170,-65,"#3c6767")}${hoja(194,168,65,"#3c6767")}
+    ${puntos(84,110,.9)}${puntos(178,106,1)}${puntos(130,90,1.1)}
+    ${varas.map(v=>v.bells).join("")}
+    ${marg(104,126,.82,.9)}${marg(156,122,.78,1)}${marg(130,150,.75,1.1)}
+    ${ama(74,158,.6,1.05)}${ama(188,158,.6,1.1)}
+    <polygon points="40,168 130,198 220,168 162,292 98,292" fill="#d8ac80"/>
+    <path d="M130 198 L130 292" stroke="#c49a70" stroke-width="1.5"/>
+    <path d="M40 168 L130 198 L220 168" fill="none" stroke="#f0d6b8" stroke-width="2"/>
+    <path d="M40 168 L98 292" stroke="#c49a70" stroke-width="1" opacity=".5"/>
+    <g transform="translate(130 240)">
+      <path d="M-4 4 Q-14 26 -24 40 M4 4 Q14 26 26 38" stroke="#c8285a" stroke-width="5" fill="none" stroke-linecap="round"/>
+      <ellipse cx="-17" cy="-4" rx="17" ry="9" transform="rotate(-18 -17 -4)" fill="none" stroke="#c8285a" stroke-width="5"/>
+      <ellipse cx="17" cy="-4" rx="17" ry="9" transform="rotate(18 17 -4)" fill="none" stroke="#c8285a" stroke-width="5"/>
+      <circle r="7" fill="#a91f4b"/>
+    </g>`;
+  $("#ramo").addEventListener("click", () => {
+    const r = $("#ramo"); r.classList.remove("sacude"); void r.offsetWidth; r.classList.add("sacude");
+    petalos(70);
+  });
+}
+$("#confeti").addEventListener("click", () => confeti(140));
+$("#otra").addEventListener("click", () => {
+  postal.classList.remove("volteada"); $("#mas").hidden = true; $("#pista").textContent = "dale la vuelta ↻"; $("#tit2").textContent = "¡Llegó a Ibarra!";
+  mues.forEach(m => { m.classList.remove("sel"); m.style.transform = "rotate(0deg)"; });
+  $("#enviar").disabled = false; poner(0); ir(1);
+});
+}
+</script>
+</body>
+</html>
